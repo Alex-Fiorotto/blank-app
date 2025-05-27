@@ -146,7 +146,7 @@ if arquivo:
         st.error(f"Erro ao processar o arquivo: {str(e)}")
         st.error("Verifique se o arquivo está no formato correto.")
 else:
-    st.info("Por favor, envie um arquivo Excel com as colunas Localizador e Categoria.") file_name="relatorio_acessos.xlsx")
+    st.info("Por favor, envie um arquivo Excel com as colunas Localizador e Categoria.") file_name="relatorio_acessos.xlsx"
 
     except Exception as e:
         st.error(f"Erro ao processar o arquivo: {e}")
