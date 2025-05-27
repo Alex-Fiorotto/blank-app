@@ -17,16 +17,20 @@ if arquivo:
         else:
             df.columns = ["Código", "Categoria"]
 
-            # Mapeamento de nomes da planilha para nomes padronizados
             mapeamento = {
-                "INGRESSO ADULTO": "INGRESSO ADULTO PROMOCIONAL",
-                "INGRESSO INFANTIL": "INGRESSO INFANTIL PROMOCIONAL",
-                "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
-                "INGRESSO EXCURSÃO": "EXCURSAO",
-                "INGRESSO BANDA": "BANDA",
-                "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
-                "AGENDAMENTO – CONSULTORES": "AGEND CONS VENDAS",
-                "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS"
+    "INGRESSO ADULTO": "INGRESSO ADULTO PROMOCIONAL",
+    "INGRESSO INFANTIL": "INGRESSO INFANTIL PROMOCIONAL",
+    "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
+    "INGRESSO EXCURSÃO": "EXCURSAO",
+    "INGRESSO BANDA": "BANDA",
+    "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
+    "AGENDAMENTO – CONSULTORES": "AGEND CONS VENDAS",
+    "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS",
+    # Novos mapeamentos para ECOVIP
+    "ECOVIP S/ CADASTRO": "ECOVIP",
+    "ECOVIP S/ CARTEIRINHA": "ECOVIP",
+    "EcoVip s/ Cadastro": "ECOVIP",
+    "EcoVip s/ carteirinha": "ECOVIP"
             }
 
             # Aplica o mapeamento
@@ -49,11 +53,12 @@ if arquivo:
 
             # Agrupamento das categorias finais
             def agrupar_categoria(cat):
-                if cat in dayuser_categorias:
-                    return "DAY-USER"
-                elif cat in ecovip_categorias:
-                    return "ECOVIP"
-                return cat
+    cat_str = str(cat).upper()  # Garante que é string e em maiúsculas
+    if cat_str in [c.upper() for c in dayuser_categorias]:
+        return "DAY-USER"
+    elif any(ecovip in cat_str for ecovip in ["ECOVIP", "ECO VIP"]):  # Verifica variações
+        return "ECOVIP"
+    return cat
 
             df["Categoria Final"] = df["Categoria Normalizada"].apply(agrupar_categoria)
 
