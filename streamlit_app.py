@@ -17,7 +17,7 @@ if arquivo:
         else:
             df.columns = ["Código", "Categoria"]
 
-            # Mapeamento personalizado de categorias
+            # Mapeamento de nomes da planilha para nomes padronizados
             mapeamento = {
                 "INGRESSO ADULTO": "INGRESSO ADULTO PROMOCIONAL",
                 "INGRESSO INFANTIL": "INGRESSO INFANTIL PROMOCIONAL",
@@ -28,13 +28,13 @@ if arquivo:
                 "EcoVip s/ carteirinha": "ECOVIP",
                 "EcoVip s/ cadastro": "ECOVIP",
                 "AGENDAMENTO – CONSULTORES": "AGEND CONS VENDAS",
-                "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS",
+                "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS"
             }
 
             # Aplica o mapeamento
             df["Categoria Normalizada"] = df["Categoria"].replace(mapeamento)
 
-            # Categorias que compõem o grupo DAY-USER
+            # Define categorias do grupo DAY-USER
             dayuser_categorias = [
                 "INGRESSO ADULTO PROMOCIONAL",
                 "INGRESSO COMBO",
@@ -42,7 +42,7 @@ if arquivo:
                 "INGRESSO INFANTIL PROMOCIONAL"
             ]
 
-            # Aplica lógica de agrupamento para DAY-USER
+            # Agrupamento do DAY-USER
             def agrupar_categoria(cat):
                 if cat in dayuser_categorias:
                     return "DAY-USER"
@@ -50,7 +50,7 @@ if arquivo:
 
             df["Categoria Final"] = df["Categoria Normalizada"].apply(agrupar_categoria)
 
-            # Ordem das categorias
+            # Ordem das categorias no relatório
             primeira_parte = [
                 "ECOVIP",
                 "CORTESIA ECOVIP",
@@ -79,7 +79,6 @@ if arquivo:
             total1 = contagem.reindex(primeira_parte, fill_value=0).sum()
             total2 = contagem.reindex(segunda_parte, fill_value=0).sum()
 
-            # Geração da tabela final com uma linha em branco
             linhas = []
             for cat in primeira_parte:
                 linhas.append((cat, contagem.get(cat, 0)))
@@ -95,9 +94,9 @@ if arquivo:
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
             st.subheader("Resumo de Categorias")
-            st.table(resultado_df)  # sem barra de rolagem
+            st.table(resultado_df)
 
-            # Exportar para Excel
+            # Exportação
             output = BytesIO()
             resultado_df.to_excel(output, index=False)
             st.download_button("📥 Baixar Relatório Excel", data=output.getvalue(), file_name="relatorio_acessos.xlsx")
