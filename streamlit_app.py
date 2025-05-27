@@ -1,53 +1,69 @@
 import pandas as pd
-import streamlit as st
-from io import BytesIO
+import tkinter as tk
+from tkinter import filedialog, messagebox
+import os
 
-st.set_page_config(page_title="Relatório de Acessos", layout="centered")
-st.title("📊 Relatório de Acessos por Categoria")
+# Mapeamento dos tipos de acesso
+def classificar_tipo(categoria):
+    categoria = categoria.upper()
+    
+    if categoria in {
+        "INGRESSO ADULTO PROMOCIONAL",
+        "INGRESSO ADULTO + FEIJOADA",
+        "INGRESSO COMBO",
+        "INGRESSO ESPECIAL"
+    }:
+        return "DAY-USER PAGANTE"
+    
+    elif "ANIVERSARIANTE" in categoria or categoria == "INGRESSO BEBE":
+        return "DAY-USER NÃO PAGANTE"
+    
+    else:
+        return "OUTROS"
 
-# Categorias que farão parte da linha "DAYUSER"
-categorias_dayuser = {
-    "INGRESSO ADULTO PROMOCIONAL",
-    "INGRESSO ADULTO + FEIJOADA",
-    "INGRESSO COMBO",
-    "INGRESSO ESPECIAL"
-}
+def processar_arquivo():
+    caminho = filedialog.askopenfilename(filetypes=[("Arquivos Excel", "*.xlsx")])
+    if not caminho:
+        return
 
-uploaded_file = st.file_uploader("📁 Envie seu arquivo Excel (.xlsx)", type=["xlsx"])
-
-if uploaded_file:
     try:
-        df = pd.read_excel(uploaded_file)
+        df = pd.read_excel(caminho)
 
         if 'Categoria' not in df.columns:
-            st.error("A planilha precisa conter uma coluna chamada 'Categoria'.")
-        else:
-            # Contagem por categoria
-            resumo = df['Categoria'].value_counts().reset_index()
-            resumo.columns = ['Categoria', 'Quantidade de Acessos']
+            messagebox.showerror("Erro", "A planilha deve conter uma coluna chamada 'Categoria'.")
+            return
 
-            # Total da categoria agrupada "DAYUSER"
-            total_dayuser = df[df['Categoria'].isin(categorias_dayuser)].shape[0]
+        # Aplica classificação
+        df['Tipo de Acesso'] = df['Categoria'].apply(classificar_tipo)
 
-            # Adiciona a linha DAYUSER
-            resumo = pd.concat([
-                resumo,
-                pd.DataFrame([['DAYUSER', total_dayuser]], columns=['Categoria', 'Quantidade de Acessos'])
-            ], ignore_index=True)
+        # Totalizador por tipo
+        resumo_por_tipo = df['Tipo de Acesso'].value_counts().reset_index()
+        resumo_por_tipo.columns = ['Tipo de Acesso', 'Total de Acessos']
 
-            # Mostra resultado
-            st.subheader("Resumo dos Acessos:")
-            st.dataframe(resumo)
+        # Relatório analítico por categoria dentro de cada tipo
+        analitico = df.groupby(['Tipo de Acesso', 'Categoria']).size().reset_index(name='Quantidade')
 
-            # Prepara para download
-            output = BytesIO()
-            resumo.to_excel(output, index=False, engine='openpyxl')
-            st.download_button(
-                label="📥 Baixar Relatório em Excel",
-                data=output.getvalue(),
-                file_name="relatorio_acessos.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        # Cria planilha com duas abas
+        nome_saida = os.path.join(os.path.dirname(caminho), "relatorio_acessos_formatado.xlsx")
+        with pd.ExcelWriter(nome_saida, engine='openpyxl') as writer:
+            resumo_por_tipo.to_excel(writer, index=False, sheet_name="Resumo por Tipo")
+            analitico.to_excel(writer, index=False, sheet_name="Analítico por Categoria")
+
+        messagebox.showinfo("Sucesso", f"Relatório com tipos salvo em:\n{nome_saida}")
 
     except Exception as e:
-        st.error(f"Erro ao processar o arquivo: {e}")
+        messagebox.showerror("Erro ao processar", str(e))
+
+
+# Interface gráfica
+root = tk.Tk()
+root.title("Relatório de Acessos por Tipo")
+root.geometry("450x200")
+
+label = tk.Label(root, text="Clique para selecionar a planilha de acessos com categorias")
+label.pack(pady=20)
+
+botao = tk.Button(root, text="Selecionar Planilha", command=processar_arquivo)
+botao.pack(pady=10)
+
+root.mainloop()
