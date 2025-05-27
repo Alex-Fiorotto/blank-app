@@ -39,7 +39,9 @@ if arquivo:
                 "INGRESSO ADULTO PROMOCIONAL",
                 "INGRESSO COMBO",
                 "INGRESSO ESPECIAL",
-                "INGRESSO INFANTIL PROMOCIONAL"
+                "INGRESSO INFANTIL PROMOCIONAL",
+                "INGRESSO ADULTO + FEIJOADA",
+                "INGRESSO INFANTIL + FEIJOADA"
             ]
 
             # Agrupamento do DAY-USER
