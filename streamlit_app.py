@@ -27,7 +27,7 @@ if arquivo:
                 "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
                 "EcoVip s/ carteirinha": "ECOVIP",
                 "EcoVip s/ cadastro": "ECOVIP",
-                "AGENDAMENTO – CONSULTORES": "AGEND CONS VENDAS",
+                "AGENDAMENTO - CONSULTORES": "AGEND CONS VENDAS",
                 "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS"
             }
 
