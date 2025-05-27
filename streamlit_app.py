@@ -17,13 +17,24 @@ if arquivo:
         else:
             df.columns = ["Código", "Categoria"]
 
-            # Atualiza nomes conforme solicitado
-            df["Categoria"] = df["Categoria"].replace({
+            # Mapeamento personalizado de categorias
+            mapeamento = {
                 "INGRESSO ADULTO": "INGRESSO ADULTO PROMOCIONAL",
-                "INGRESSO INFANTIL": "INGRESSO INFANTIL PROMOCIONAL"
-            })
+                "INGRESSO INFANTIL": "INGRESSO INFANTIL PROMOCIONAL",
+                "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
+                "INGRESSO EXCURSÃO": "EXCURSAO",
+                "INGRESSO BANDA": "BANDA",
+                "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
+                "EcoVip s/ carteirinha": "ECOVIP",
+                "EcoVip s/ cadastro": "ECOVIP",
+                "AGENDAMENTO – CONSULTORES": "AGEND CONS VENDAS",
+                "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS",
+            }
 
-            # Define categorias do grupo DAY-USER
+            # Aplica o mapeamento
+            df["Categoria Normalizada"] = df["Categoria"].replace(mapeamento)
+
+            # Categorias que compõem o grupo DAY-USER
             dayuser_categorias = [
                 "INGRESSO ADULTO PROMOCIONAL",
                 "INGRESSO COMBO",
@@ -31,14 +42,15 @@ if arquivo:
                 "INGRESSO INFANTIL PROMOCIONAL"
             ]
 
-            df["Categoria Agrupada"] = df["Categoria"].apply(
-                lambda x: "DAY-USER" if x in dayuser_categorias else x
-            )
+            # Aplica lógica de agrupamento para DAY-USER
+            def agrupar_categoria(cat):
+                if cat in dayuser_categorias:
+                    return "DAY-USER"
+                return cat
 
-            # Contagem
-            contagem = df["Categoria Agrupada"].value_counts()
+            df["Categoria Final"] = df["Categoria Normalizada"].apply(agrupar_categoria)
 
-            # Lista de categorias na ordem desejada
+            # Ordem das categorias
             primeira_parte = [
                 "ECOVIP",
                 "CORTESIA ECOVIP",
@@ -62,31 +74,30 @@ if arquivo:
                 "SEGURO CHUVA",
             ]
 
-            # Soma da primeira parte (TOTAL:)
+            contagem = df["Categoria Final"].value_counts()
+
             total1 = contagem.reindex(primeira_parte, fill_value=0).sum()
+            total2 = contagem.reindex(segunda_parte, fill_value=0).sum()
 
-            # Monta DataFrame formatado
+            # Geração da tabela final com uma linha em branco
             linhas = []
-
-            for categoria in primeira_parte:
-                linhas.append((categoria, contagem.get(categoria, 0)))
+            for cat in primeira_parte:
+                linhas.append((cat, contagem.get(cat, 0)))
 
             linhas.append(("TOTAL:", total1))
             linhas.append(("", ""))  # linha em branco
 
-            for categoria in segunda_parte:
-                linhas.append((categoria, contagem.get(categoria, 0)))
+            for cat in segunda_parte:
+                linhas.append((cat, contagem.get(cat, 0)))
 
-            total2 = contagem.reindex(segunda_parte, fill_value=0).sum()
             linhas.append(("TOTAL (LIMBER):", total2))
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
-            # Exibir resultado
             st.subheader("Resumo de Categorias")
-            st.table(resultado_df)  # Exibe sem barra de rolagem
+            st.table(resultado_df)  # sem barra de rolagem
 
-            # Download Excel
+            # Exportar para Excel
             output = BytesIO()
             resultado_df.to_excel(output, index=False)
             st.download_button("📥 Baixar Relatório Excel", data=output.getvalue(), file_name="relatorio_acessos.xlsx")
