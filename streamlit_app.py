@@ -27,7 +27,6 @@ if arquivo:
                 "INGRESSO INFANTIL": "INGRESSO INFANTIL PROMOCIONAL",
                 "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
                 "INGRESSO EXCURSÃO": "EXCURSAO",
-                "INGRESSO EXCURSÃO": "EXCURSAO",  # variação de digitação
                 "INGRESSO BANDA": "BANDA",
                 "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
                 "AGENDAMENTO – CONSULTORES": "AGEND CONS VENDAS",
@@ -37,9 +36,10 @@ if arquivo:
                 # Mapeamentos para ECOVIP
                 "ECOVIP S/ CADASTRO": "ECOVIP",
                 "ECOVIP S/ CARTEIRINHA": "ECOVIP",
+                "ECOVIP S/ CADASTRO": "ECOVIP",
+                "ECOVIP": "ECOVIP",
                 "EcoVip s/ Cadastro": "ECOVIP",
                 "EcoVip s/ carteirinha": "ECOVIP",
-                "ECO VIP": "ECOVIP",
                 "MULTICLUBES - DAY-USE": "DAY-USER"
             }
             
@@ -131,7 +131,7 @@ if arquivo:
                 df.to_excel(writer, sheet_name='Dados Completos')
             
             st.download_button(
-                "📥 Baixar Relatório Completo",
+                label="📥 Baixar Relatório Completo",
                 data=output.getvalue(),
                 file_name="relatorio_acessos.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -146,9 +146,4 @@ if arquivo:
         st.error(f"Erro ao processar o arquivo: {str(e)}")
         st.error("Verifique se o arquivo está no formato correto.")
 else:
-    st.info("Por favor, envie um arquivo Excel com as colunas Localizador e Categoria.") file_name="relatorio_acessos.xlsx"
-
-    except Exception as e:
-        st.error(f"Erro ao processar o arquivo: {e}")
-else:
-    st.info("Por favor, envie um arquivo Excel com as colunas Código e Categoria.")
+    st.info("Por favor, envie um arquivo Excel com as colunas Localizador e Categoria.")
