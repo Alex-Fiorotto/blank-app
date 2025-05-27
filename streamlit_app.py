@@ -25,16 +25,14 @@ if arquivo:
                 "INGRESSO EXCURSÃO": "EXCURSAO",
                 "INGRESSO BANDA": "BANDA",
                 "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
-                "EcoVip s/ carteirinha": "ECOVIP",
-                "EcoVip s/ cadastro": "ECOVIP",
-                "AGENDAMENTO - CONSULTORES": "AGEND CONS VENDAS",
+                "AGENDAMENTO – CONSULTORES": "AGEND CONS VENDAS",
                 "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS"
             }
 
             # Aplica o mapeamento
             df["Categoria Normalizada"] = df["Categoria"].replace(mapeamento)
 
-            # Define categorias do grupo DAY-USER
+            # Define categorias dos grupos
             dayuser_categorias = [
                 "INGRESSO ADULTO PROMOCIONAL",
                 "INGRESSO COMBO",
@@ -44,10 +42,17 @@ if arquivo:
                 "INGRESSO INFANTIL + FEIJOADA"
             ]
 
-            # Agrupamento do DAY-USER
+            ecovip_categorias = [
+                "EcoVip s/ Cadastro",
+                "EcoVip s/ carteirinha"
+            ]
+
+            # Agrupamento das categorias finais
             def agrupar_categoria(cat):
                 if cat in dayuser_categorias:
                     return "DAY-USER"
+                elif cat in ecovip_categorias:
+                    return "ECOVIP"
                 return cat
 
             df["Categoria Final"] = df["Categoria Normalizada"].apply(agrupar_categoria)
