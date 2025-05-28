@@ -165,9 +165,24 @@ if arquivo:
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
-            # Exibição do relatório
+            # Exibição do relatório com largura controlada
             st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
-            st.dataframe(resultado_df, hide_index=True)
+
+            # 🔽 Remove a barra de rolagem lateral aplicando estilo CSS personalizado
+            st.markdown("""
+            <style>
+            .stDataFrame > div {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .stDataFrame div[data-testid="column"] {
+                width: fit-content;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+            # Exibe com largura aumentada e sem scroll lateral
+            st.dataframe(resultado_df, hide_index=True, use_container_width=True)
 
             # Exportação para Excel
             output = BytesIO()
