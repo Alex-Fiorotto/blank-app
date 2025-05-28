@@ -19,7 +19,7 @@ if arquivo:
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
         else:
-            # Renomeia colunas
+            # Renomeia colunas (ajuste conforme necessário)
             df.columns = ["Localizador", "Categoria", "Data_Hora"]
 
             # Converte data/hora
@@ -61,7 +61,7 @@ if arquivo:
                 "EcoVip s/ Cadastro": "ECOVIP",
                 "EcoVip s/ carteirinha": "ECOVIP",
 
-                # Multiclubes
+                # Multiclubes (não é mais DAY-USER)
                 "MULTICLUBES - DAY-USE": "MULTICLUBES - DAY-USE",
 
                 # Agendamento Consultores
@@ -165,28 +165,9 @@ if arquivo:
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
-            # Exibição do relatório SEM barra de rolagem
+            # Exibição do relatório
             st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
-
-            # Remove rolagem com CSS
-            st.markdown("""
-            <style>
-            .streamlit-expanderHeader, .streamlit-table {
-                font-size: 16px;
-            }
-            table {
-                width: 100%;
-                table-layout: fixed;
-                word-wrap: break-word;
-            }
-            thead tr th {
-                background-color: #f8f9fa !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
-            # Usa st.table para exibir sem rolagem
-            st.table(resultado_df)
+            st.dataframe(resultado_df, hide_index=True)
 
             # Exportação para Excel
             output = BytesIO()
