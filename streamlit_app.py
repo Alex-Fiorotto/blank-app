@@ -36,6 +36,8 @@ if arquivo:
                 "INGRESSO ADULTO BILHETERIA": "DAY-USER",
                 "INGRESSO INFANTIL + ALMOÇO": "DAY-USER",
                 "INGRESSO ESPECIAL": "DAY-USER",
+
+                # Day User (com feijoada)
                 "INGRESSO ADULTO + FEIJOADA": "DAY-USER",
                 "INGRESSO INFANTIL + FEIJOADA": "DAY-USER",
 
@@ -163,35 +165,28 @@ if arquivo:
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
-            # Exibição do relatório sem barras de rolagem
+            # Exibição do relatório SEM barra de rolagem
             st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
-            
-            # CSS para remover barras de rolagem
+
+            # Remove rolagem com CSS
             st.markdown("""
             <style>
-                .stDataFrame {
-                    overflow: hidden !important;
-                }
-                .stDataFrame > div {
-                    overflow: hidden !important;
-                }
-                .stDataFrame > div > div {
-                    overflow: hidden !important;
-                }
-                .stDataFrame > div > div > div {
-                    overflow: hidden !important;
-                }
-                .stDataFrame > div > div > div > div {
-                    overflow: hidden !important;
-                }
-                .stDataFrame > div > div > div > div > div {
-                    overflow: hidden !important;
-                }
+            .streamlit-expanderHeader, .streamlit-table {
+                font-size: 16px;
+            }
+            table {
+                width: 100%;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+            thead tr th {
+                background-color: #f8f9fa !important;
+            }
             </style>
             """, unsafe_allow_html=True)
 
-            # Exibe o dataframe sem rolagem
-            st.dataframe(resultado_df, hide_index=True, use_container_width=True)
+            # Usa st.table para exibir sem rolagem
+            st.table(resultado_df)
 
             # Exportação para Excel
             output = BytesIO()
