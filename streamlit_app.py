@@ -163,21 +163,35 @@ if arquivo:
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
-            # Exibição do relatório SEM barra de rolagem lateral e com altura controlada
+            # Exibição do relatório sem barras de rolagem
             st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
-
-            # 🔽 Remove a rolagem lateral e controla a altura da tabela
+            
+            # CSS para remover barras de rolagem
             st.markdown("""
             <style>
-            .stDataFrame > div {
-                overflow-x: auto;
-                white-space: nowrap;
-            }
+                .stDataFrame {
+                    overflow: hidden !important;
+                }
+                .stDataFrame > div {
+                    overflow: hidden !important;
+                }
+                .stDataFrame > div > div {
+                    overflow: hidden !important;
+                }
+                .stDataFrame > div > div > div {
+                    overflow: hidden !important;
+                }
+                .stDataFrame > div > div > div > div {
+                    overflow: hidden !important;
+                }
+                .stDataFrame > div > div > div > div > div {
+                    overflow: hidden !important;
+                }
             </style>
             """, unsafe_allow_html=True)
 
-            # Define uma altura fixa menor para evitar rolagem vertical excessiva
-            st.dataframe(resultado_df, hide_index=True, use_container_width=True, height=500)
+            # Exibe o dataframe sem rolagem
+            st.dataframe(resultado_df, hide_index=True, use_container_width=True)
 
             # Exportação para Excel
             output = BytesIO()
