@@ -28,7 +28,6 @@ if arquivo:
 
             # Mapeamento final das categorias
             mapeamento_final = {
-                "INGRESSO RETORNO": "DAY-USER",
                 "INGRESSO COMBO": "DAY-USER",
                 "INGRESSO ADULTO PROMOCIONAL": "DAY-USER",
                 "INGRESSO INFANTIL PROMOCIONAL": "DAY-USER",
@@ -141,11 +140,6 @@ if arquivo:
             # Exibição do relatório
             st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
             st.dataframe(resultado_df, hide_index=True)
-
-            # Gráfico de barras
-            categorias_existentes = [cat for cat in parte1 if cat in contagem and contagem[cat] > 0]
-            if categorias_existentes:
-                st.bar_chart(contagem[categorias_existentes])
 
             # Exportação para Excel
             output = BytesIO()
