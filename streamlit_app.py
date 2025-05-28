@@ -14,7 +14,7 @@ if arquivo:
     try:
         # Leitura do arquivo
         df = pd.read_excel(arquivo)
-        
+
         # Verifica se tem pelo menos 3 colunas
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
@@ -28,25 +28,63 @@ if arquivo:
 
             # Mapeamento final das categorias
             mapeamento_final = {
+                # Day User
                 "INGRESSO COMBO": "DAY-USER",
                 "INGRESSO ADULTO PROMOCIONAL": "DAY-USER",
                 "INGRESSO INFANTIL PROMOCIONAL": "DAY-USER",
+                "INTEIRA INFANTIL BILHETERIA": "DAY-USER",
+                "INGRESSO ADULTO BILHETERIA": "DAY-USER",
+                "INGRESSO INFANTIL + ALMOÇO": "DAY-USER",
+
+                # Almoço
+                "FEIJOADA 30": "ALMOÇO",
+                "INGRESSO ADULTO + FEIJOADA": "ALMOÇO",
+                "INGRESSO INFANTIL + FEIJOADA": "ALMOÇO",
+                "INGRESSO ADULTO + ALMOÇO": "ALMOÇO",
+                "APENAS ALMOÇO - ADULTO": "ALMOÇO",
+                "APENAS ALMOÇO - INFANTIL": "ALMOÇO",
+
+                # Ingresso Bebê
                 "INGRESSO BEBÊ": "INGRESSO BEBÊ",
-                "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
-                "INGRESSO ADULTO + FEIJOADA": "DAY-USER",
-                "INGRESSO INFANTIL + FEIJOADA": "DAY-USER",
+                "INGRESSO BEBÊ + ALMOÇO": "INGRESSO BEBÊ",
+
+                # Visitas Guiadas
+                "VISITA GUIADA": "VISITA GUIADA",
+
+                # Excursão
+                "INGRESSO EXCURSÃO": "EXCURSAO",
+
+                # EcoVip
                 "ECOVIP S/ CADASTRO": "ECOVIP",
                 "EcoVip s/ Cadastro": "ECOVIP",
+                "EcoVip s/ carteirinha": "ECOVIP",
+
+                # Multiclubes
                 "MULTICLUBES - DAY-USE": "DAY-USER",
-                "VISITA GUIADA": "VISITA GUIADA",
+
+                # Agendamento Consultores
                 "AGENDAMENTO - CONSULTORES": "AGEND CONS VENDAS",
+
+                # Banda
                 "INGRESSO BANDA": "BANDA",
-                "INGRESSO ESPECIAL": "DAY-USER",
+
+                # Aniversariantes
+                "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
+
+                # Cortesias / Promoções
                 "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
+                "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS",
+                "CORTESIA RÁDIO TUPA": "AÇOES PROMOCIONAIS",
+                "CORTESIA INFLUENCER": "AÇOES PROMOCIONAIS",
+                "CORTESIA LIVE": "AÇOES PROMOCIONAIS",
+
+                # Retorno
+                "INGRESSO RETORNO": "INGRESSO RETORNO",
+
+                # Outros
                 "CASA DA ÁRVORE": "CASA DA ÁRVORE",
                 "ECO LOUNGE": "ECO LOUNGE",
-                "SEGURO CHUVA": "SEGURO CHUVA",
-                "INGRESSO RETORNO": "INGRESSO RETORNO"
+                "SEGURO CHUVA": "SEGURO CHUVA"
             }
 
             # Aplica mapeamento final
@@ -62,9 +100,11 @@ if arquivo:
                 "ANIVERSARIANTES",
                 "FUNCIONÁRIOS",
                 "BANDA",
+                "ALMOÇO",
                 "VISITA GUIADA",
                 "EXCURSAO",
                 "AÇOES PROMOCIONAIS",
+                "DESCONHECIDO",
                 "",  # linha em branco
                 "TOTAL:",
                 "",
@@ -107,6 +147,7 @@ if arquivo:
                 "ANIVERSARIANTES",
                 "FUNCIONÁRIOS",
                 "BANDA",
+                "ALMOÇO",
                 "VISITA GUIADA",
                 "EXCURSAO",
                 "AÇOES PROMOCIONAIS"
