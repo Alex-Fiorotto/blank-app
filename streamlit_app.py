@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+from datetime import datetime
 
 # Configuração da página
 st.set_page_config(page_title="Relatório de Acessos", layout="centered")
@@ -15,11 +16,15 @@ if arquivo:
         df = pd.read_excel(arquivo)
         
         # Verificação das colunas
-        if df.shape[1] < 2:
-            st.error("O arquivo deve conter ao menos duas colunas: Localizador e Categoria.")
+        if df.shape[1] < 3:
+            st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
         else:
             # Renomeia colunas
-            df.columns = ["Localizador", "Categoria"]
+            df.columns = ["Localizador", "Categoria", "Data_Hora"]
+            
+            # Converter para datetime e extrair a data
+            df['Data_Hora'] = pd.to_datetime(df['Data_Hora'], dayfirst=True, errors='coerce')
+            df['Data'] = df['Data_Hora'].dt.date
             
             # Mapeamento de categorias
             mapeamento = {
@@ -33,6 +38,7 @@ if arquivo:
                 "AGENDAMENTO - CONSULTORES": "AGEND CONS VENDAS",
                 "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS",
                 "FEIJOADA 30": "ALMOÇO",
+                "CORTESIA RÁDIO TUPA": "AÇOES PROMOCIONAIS",
                 # Mapeamentos para ECOVIP
                 "ECOVIP S/ CADASTRO": "ECOVIP",
                 "ECOVIP S/ CARTEIRINHA": "ECOVIP",
@@ -94,8 +100,24 @@ if arquivo:
                 ]
             }
             
+            # Filtro por data
+            datas_disponiveis = df['Data'].dropna().unique()
+            if len(datas_disponiveis) > 0:
+                data_selecionada = st.selectbox(
+                    "Selecione a data para análise:",
+                    options=["Todos os dias"] + sorted(datas_disponiveis.tolist())
+                )
+                
+                if data_selecionada != "Todos os dias":
+                    df_filtrado = df[df['Data'] == data_selecionada]
+                else:
+                    df_filtrado = df
+            else:
+                st.warning("Nenhuma data válida encontrada no arquivo.")
+                df_filtrado = df
+            
             # Contagem por categoria - apenas para categorias existentes
-            contagem = df["Categoria Final"].value_counts()
+            contagem = df_filtrado["Categoria Final"].value_counts()
             
             # Função para criar linhas do relatório
             def criar_linhas_relatorio(categorias):
@@ -122,7 +144,7 @@ if arquivo:
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
             
             # Exibição dos resultados
-            st.subheader("Resumo de Categorias")
+            st.subheader(f"Resumo de Categorias {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
             st.dataframe(resultado_df, hide_index=True)
             
             # Adicionando gráfico de barras apenas com categorias existentes
@@ -131,16 +153,45 @@ if arquivo:
                 st.subheader("Distribuição de Acessos")
                 st.bar_chart(contagem[categorias_existentes])
             
+            # Análise temporal
+            if len(datas_disponiveis) > 1 and data_selecionada == "Todos os dias":
+                st.subheader("Evolução Diária")
+                
+                # Cria pivot table com contagem por data e categoria
+                pivot = df.pivot_table(
+                    index='Data',
+                    columns='Categoria Final',
+                    values='Localizador',
+                    aggfunc='count',
+                    fill_value=0
+                )
+                
+                # Filtra apenas categorias relevantes
+                categorias_evolucao = [cat for cat in categorias_relatorio["PRIMEIRA_PARTE"] if cat in pivot.columns]
+                pivot = pivot[categorias_evolucao]
+                
+                # Ordena por data
+                pivot = pivot.sort_index()
+                
+                # Mostra gráfico de linhas
+                st.line_chart(pivot)
+            
             # Exportação para Excel
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 resultado_df.to_excel(writer, index=False, sheet_name='Resumo')
+                
+                if len(datas_disponiveis) > 1:
+                    # Adiciona aba com análise por data
+                    resumo_diario = df.groupby(['Data', 'Categoria Final']).size().unstack(fill_value=0)
+                    resumo_diario.to_excel(writer, sheet_name='Por Data')
+                
                 df.to_excel(writer, sheet_name='Dados Completos')
             
             st.download_button(
                 label="📥 Baixar Relatório Completo",
                 data=output.getvalue(),
-                file_name="relatorio_acessos.xlsx",
+                file_name=f"relatorio_acessos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
             
@@ -153,4 +204,4 @@ if arquivo:
         st.error(f"Ocorreu um erro ao processar o arquivo. Verifique se o formato está correto.")
         st.error("Detalhes técnicos (para administradores): " + str(e))
 else:
-    st.info("Por favor, envie um arquivo Excel com as colunas Localizador e Categoria.")
+    st.info("Por favor, envie um arquivo Excel com as colunas: Localizador, Categoria e Data/Hora.")
