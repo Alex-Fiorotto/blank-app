@@ -19,7 +19,7 @@ if arquivo:
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
         else:
-            # Renomeia colunas (ajuste conforme necessário)
+            # Renomeia colunas
             df.columns = ["Localizador", "Categoria", "Data_Hora"]
 
             # Converte data/hora
@@ -57,7 +57,7 @@ if arquivo:
                 "EcoVip s/ Cadastro": "ECOVIP",
                 "EcoVip s/ carteirinha": "ECOVIP",
 
-                # Multiclubes (não é mais DAY-USER)
+                # Multiclubes (não é DAY-USER)
                 "MULTICLUBES - DAY-USE": "MULTICLUBES - DAY-USE",
 
                 # Agendamento Consultores
@@ -107,7 +107,7 @@ if arquivo:
             # Contagem por categoria
             contagem = df_filtrado["Categoria Final"].value_counts()
 
-            # Parte 1: principais categorias
+            # Definição dos grupos
             parte1 = [
                 "ECOVIP",
                 "CORTESIA ECOVIP",
@@ -123,28 +123,46 @@ if arquivo:
                 "AÇOES PROMOCIONAIS"
             ]
 
-            linhas = []
-            total1 = 0
-            for cat in parte1:
-                valor = contagem.get(cat, 0)
-                total1 += valor
-                linhas.append((cat, valor))
-            linhas.append(("TOTAL:", total1))
-            linhas.append(("", ""))  # linha em branco
-
-            # Parte 2: categorias secundárias
             parte2 = [
                 "INGRESSO BEBÊ",
                 "CASA DA ÁRVORE",
                 "ECO LOUNGE",
                 "SEGURO CHUVA"
             ]
-            total2 = 0
+
+            linhas_relatorio = []
+
+            # Adiciona categorias principais com expansão
+            for cat in parte1:
+                valor = contagem.get(cat, 0)
+                linha = {"Categoria": cat, "Quantidade": valor}
+                if cat in df_filtrado["Categoria Final"].unique():
+                    with st.expander(f"🔍 {cat}"):
+                        df_grupo = df_filtrado[df_filtrado["Categoria Final"] == cat]["Categoria"].value_counts().reset_index()
+                        df_grupo.columns = ["Categoria Original", "Quantidade"]
+                        st.dataframe(df_grupo, hide_index=True)
+                linhas_relatorio.append(linha)
+
+            # Total primeira parte
+            total1 = sum(contagem.get(cat, 0) for cat in parte1)
+            linhas_relatorio.append({"Categoria": "TOTAL:", "Quantidade": total1})
+            linhas_relatorio.append({"Categoria": "", "Quantidade": ""})  # linha em branco
+
+            # Adiciona categorias secundárias com expansão
             for cat in parte2:
                 valor = contagem.get(cat, 0)
-                total2 += valor
-                linhas.append((cat, valor))
-            linhas.append(("TOTAL (LIMBER):", total2))
+                linha = {"Categoria": cat, "Quantidade": valor}
+                if cat in df_filtrado["Categoria Final"].unique():
+                    with st.expander(f"🔍 {cat}"):
+                        df_grupo = df_filtrado[df_filtrado["Categoria Final"] == cat]["Categoria"].value_counts().reset_index()
+                        df_grupo.columns = ["Categoria Original", "Quantidade"]
+                        st.dataframe(df_grupo, hide_index=True)
+                linhas_relatorio.append(linha)
+
+            # Total segunda parte
+            total2 = sum(contagem.get(cat, 0) for cat in parte2)
+            linhas_relatorio.append({"Categoria": "TOTAL (LIMBER):", "Quantidade": total2})
+            linhas_relatorio.append({"Categoria": "", "Quantidade": ""})
 
             # Parte 3: categorias não mapeadas
             categorias_presentes = df_filtrado["Categoria"].str.strip().str.upper()
@@ -153,43 +171,19 @@ if arquivo:
             mascara_nao_mapeada = ~categorias_presentes.isin(categorias_mapeadas_keys)
             nao_mapeadas_df = df_filtrado.loc[mascara_nao_mapeada, "Categoria"]
             contagem_nao_mapeadas = nao_mapeadas_df.value_counts().reset_index()
-            contagem_nao_mapeadas.columns = ["Categoria", "Quantidade"]
+            contagem_nao_mapeadas.columns = ["Categoria Original", "Quantidade"]
 
             if not contagem_nao_mapeadas.empty:
-                linhas.append(("", ""))
-                linhas.append(("CATEGORIAS NÃO MAPEADAS:", ""))
+                linhas_relatorio.append({"Categoria": "CATEGORIAS NÃO MAPEADAS:", "Quantidade": ""})
                 for _, row in contagem_nao_mapeadas.iterrows():
-                    linhas.append((row["Categoria"], row["Quantidade"]))
+                    linhas_relatorio.append({"Categoria": row["Categoria Original"], "Quantidade": row["Quantidade"]})
 
-            resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
+            # Gera DataFrame do relatório final
+            resultado_df = pd.DataFrame(linhas_relatorio)
 
-            # Exibição do relatório com expansão por categoria
+            # Exibe o relatório como uma única tabela
             st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
-
-            for _, row in resultado_df.iterrows():
-                categoria = row["Categoria"]
-                quantidade = row["Quantidade"]
-
-                if categoria == "":
-                    st.write("")
-                    continue
-
-                col1, col2 = st.columns([4, 1])
-                col1.write(f"**{categoria}**")
-                col2.write(str(quantidade))
-
-                # Se for um grupo com composição, mostra detalhes
-                if categoria in parte1 or categoria in parte2:
-                    with st.expander("🔍 Ver detalhes"):
-                        # Filtra as categorias originais que formam esse grupo
-                        df_grupo = df_filtrado[df_filtrado["Categoria Final"] == categoria]
-                        contagem_grupo = df_grupo["Categoria"].value_counts().reset_index()
-                        contagem_grupo.columns = ["Categoria Original", "Quantidade"]
-
-                        if not contagem_grupo.empty:
-                            st.dataframe(contagem_grupo, hide_index=True)
-                        else:
-                            st.info("Nenhuma categoria original encontrada.")
+            st.dataframe(resultado_df, hide_index=True)
 
             # Exportação para Excel
             output = BytesIO()
@@ -217,5 +211,6 @@ if arquivo:
     except Exception as e:
         st.error("Ocorreu um erro ao processar o arquivo. Verifique se o formato está correto.")
         st.error(f"Detalhes técnicos: {e}")
+
 else:
     st.info("Por favor, envie um arquivo Excel com as colunas: Localizador, Categoria e Data/Hora.")
