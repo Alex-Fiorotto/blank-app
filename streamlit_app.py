@@ -35,7 +35,6 @@ if arquivo:
                 "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
                 "INGRESSO ADULTO + FEIJOADA": "DAY-USER",
                 "INGRESSO INFANTIL + FEIJOADA": "DAY-USER",
-                "FEIJOADA 30": "ALMOÇO",
                 "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS",
                 "ECOVIP S/ CADASTRO": "ECOVIP",
                 "EcoVip s/ Cadastro": "ECOVIP",
@@ -110,7 +109,7 @@ if arquivo:
                 "ANIVERSARIANTES",
                 "FUNCIONÁRIOS",
                 "BANDA",
-                "ALMOÇO",
+                # "ALMOÇO", <-- Removido conforme solicitação
                 "VISITA GUIADA",
                 "EXCURSAO",
                 "AÇOES PROMOCIONAIS"
@@ -134,6 +133,17 @@ if arquivo:
                 total2 += valor
                 linhas.append((cat, valor))
             linhas.append(("TOTAL (LIMBER):", total2))
+
+            # Parte 3: categorias não mapeadas
+            categorias_presentes = set(df_filtrado["Categoria"].str.strip().str.upper())
+            categorias_mapeadas = set(k.upper() for k in mapeamento_final.keys())
+            categorias_nao_mapeadas = sorted(categorias_presentes - categorias_mapeadas)
+
+            if categorias_nao_mapeadas:
+                linhas.append(("", ""))
+                linhas.append(("CATEGORIAS NÃO MAPEADAS:", ""))
+                for cat in categorias_nao_mapeadas:
+                    linhas.append((cat, ""))
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
