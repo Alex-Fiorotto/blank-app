@@ -14,12 +14,12 @@ if arquivo:
     try:
         # Leitura do arquivo
         df = pd.read_excel(arquivo)
-
+        
         # Verifica se tem pelo menos 3 colunas
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
         else:
-            # Renomeia colunas
+            # Renomeia colunas (ajuste conforme necessário)
             df.columns = ["Localizador", "Categoria", "Data_Hora"]
 
             # Converte data/hora
@@ -90,32 +90,6 @@ if arquivo:
             # Aplica mapeamento final
             df["Categoria Final"] = df["Categoria"].str.strip().str.upper().replace({k.upper(): v for k, v in mapeamento_final.items()})
 
-            # Categorias que aparecem no relatório
-            ordem_relatorio = [
-                "ECOVIP",
-                "CORTESIA ECOVIP",
-                "DAY-USER",
-                "INGRESSO RETORNO",
-                "AGEND CONS VENDAS",
-                "ANIVERSARIANTES",
-                "FUNCIONÁRIOS",
-                "BANDA",
-                "ALMOÇO",
-                "VISITA GUIADA",
-                "EXCURSAO",
-                "AÇOES PROMOCIONAIS",
-                "DESCONHECIDO",
-                "",  # linha em branco
-                "TOTAL:",
-                "",
-                "INGRESSO BEBÊ",
-                "CASA DA ÁRVORE",
-                "ECO LOUNGE",
-                "SEGURO CHUVA",
-                "",
-                "TOTAL (LIMBER):"
-            ]
-
             # Filtro por data
             datas_disponiveis = df['Data'].dropna().unique()
             if len(datas_disponiveis) > 0:
@@ -135,9 +109,7 @@ if arquivo:
             # Contagem por categoria
             contagem = df_filtrado["Categoria Final"].value_counts()
 
-            # Gera linhas do relatório
-            linhas = []
-            total1 = 0
+            # Parte 1: principais categorias
             parte1 = [
                 "ECOVIP",
                 "CORTESIA ECOVIP",
@@ -152,6 +124,9 @@ if arquivo:
                 "EXCURSAO",
                 "AÇOES PROMOCIONAIS"
             ]
+
+            linhas = []
+            total1 = 0
             for cat in parte1:
                 valor = contagem.get(cat, 0)
                 total1 += valor
@@ -159,6 +134,7 @@ if arquivo:
             linhas.append(("TOTAL:", total1))
             linhas.append(("", ""))  # linha em branco
 
+            # Parte 2: categorias secundárias
             parte2 = [
                 "INGRESSO BEBÊ",
                 "CASA DA ÁRVORE",
