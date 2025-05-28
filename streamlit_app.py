@@ -19,7 +19,7 @@ if arquivo:
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
         else:
-            # Renomeia colunas (ajuste conforme necessário)
+            # Renomeia colunas
             df.columns = ["Localizador", "Categoria", "Data_Hora"]
 
             # Converte data/hora
@@ -36,8 +36,6 @@ if arquivo:
                 "INGRESSO ADULTO BILHETERIA": "DAY-USER",
                 "INGRESSO INFANTIL + ALMOÇO": "DAY-USER",
                 "INGRESSO ESPECIAL": "DAY-USER",
-
-                # Day User (com feijoada)
                 "INGRESSO ADULTO + FEIJOADA": "DAY-USER",
                 "INGRESSO INFANTIL + FEIJOADA": "DAY-USER",
 
@@ -61,7 +59,7 @@ if arquivo:
                 "EcoVip s/ Cadastro": "ECOVIP",
                 "EcoVip s/ carteirinha": "ECOVIP",
 
-                # Multiclubes (não é mais DAY-USER)
+                # Multiclubes
                 "MULTICLUBES - DAY-USE": "MULTICLUBES - DAY-USE",
 
                 # Agendamento Consultores
@@ -165,24 +163,21 @@ if arquivo:
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
-            # Exibição do relatório com largura controlada
+            # Exibição do relatório SEM barra de rolagem lateral e com altura controlada
             st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
 
-            # 🔽 Remove a barra de rolagem lateral aplicando estilo CSS personalizado
+            # 🔽 Remove a rolagem lateral e controla a altura da tabela
             st.markdown("""
             <style>
             .stDataFrame > div {
                 overflow-x: auto;
                 white-space: nowrap;
             }
-            .stDataFrame div[data-testid="column"] {
-                width: fit-content;
-            }
             </style>
             """, unsafe_allow_html=True)
 
-            # Exibe com largura aumentada e sem scroll lateral
-            st.dataframe(resultado_df, hide_index=True, use_container_width=True)
+            # Define uma altura fixa menor para evitar rolagem vertical excessiva
+            st.dataframe(resultado_df, hide_index=True, use_container_width=True, height=500)
 
             # Exportação para Excel
             output = BytesIO()
