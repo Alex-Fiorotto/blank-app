@@ -35,7 +35,6 @@ if arquivo:
                 "INGRESSO ANIVERSARIANTE": "ANIVERSARIANTES",
                 "INGRESSO ADULTO + FEIJOADA": "DAY-USER",
                 "INGRESSO INFANTIL + FEIJOADA": "DAY-USER",
-                "CORTESIA AÇÃO PROMOCIONAL": "AÇOES PROMOCIONAIS",
                 "ECOVIP S/ CADASTRO": "ECOVIP",
                 "EcoVip s/ Cadastro": "ECOVIP",
                 "MULTICLUBES - DAY-USE": "DAY-USER",
@@ -46,7 +45,8 @@ if arquivo:
                 "CORTESIA COLABORADOR": "FUNCIONÁRIOS",
                 "CASA DA ÁRVORE": "CASA DA ÁRVORE",
                 "ECO LOUNGE": "ECO LOUNGE",
-                "SEGURO CHUVA": "SEGURO CHUVA"
+                "SEGURO CHUVA": "SEGURO CHUVA",
+                "INGRESSO RETORNO": "INGRESSO RETORNO"
             }
 
             # Aplica mapeamento final
@@ -62,11 +62,9 @@ if arquivo:
                 "ANIVERSARIANTES",
                 "FUNCIONÁRIOS",
                 "BANDA",
-                "ALMOÇO",
                 "VISITA GUIADA",
                 "EXCURSAO",
                 "AÇOES PROMOCIONAIS",
-                "DESCONHECIDO",
                 "",  # linha em branco
                 "TOTAL:",
                 "",
@@ -109,7 +107,6 @@ if arquivo:
                 "ANIVERSARIANTES",
                 "FUNCIONÁRIOS",
                 "BANDA",
-                # "ALMOÇO", <-- Removido conforme solicitação
                 "VISITA GUIADA",
                 "EXCURSAO",
                 "AÇOES PROMOCIONAIS"
@@ -135,15 +132,19 @@ if arquivo:
             linhas.append(("TOTAL (LIMBER):", total2))
 
             # Parte 3: categorias não mapeadas
-            categorias_presentes = set(df_filtrado["Categoria"].str.strip().str.upper())
-            categorias_mapeadas = set(k.upper() for k in mapeamento_final.keys())
-            categorias_nao_mapeadas = sorted(categorias_presentes - categorias_mapeadas)
+            categorias_presentes = df_filtrado["Categoria"].str.strip().str.upper()
+            categorias_mapeadas_keys = set(k.upper() for k in mapeamento_final.keys())
 
-            if categorias_nao_mapeadas:
+            mascara_nao_mapeada = ~categorias_presentes.isin(categorias_mapeadas_keys)
+            nao_mapeadas_df = df_filtrado.loc[mascara_nao_mapeada, "Categoria"]
+            contagem_nao_mapeadas = nao_mapeadas_df.value_counts().reset_index()
+            contagem_nao_mapeadas.columns = ["Categoria", "Quantidade"]
+
+            if not contagem_nao_mapeadas.empty:
                 linhas.append(("", ""))
                 linhas.append(("CATEGORIAS NÃO MAPEADAS:", ""))
-                for cat in categorias_nao_mapeadas:
-                    linhas.append((cat, ""))
+                for _, row in contagem_nao_mapeadas.iterrows():
+                    linhas.append((row["Categoria"], row["Quantidade"]))
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
