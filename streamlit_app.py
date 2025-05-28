@@ -14,7 +14,7 @@ if arquivo:
     try:
         # Leitura do arquivo
         df = pd.read_excel(arquivo)
-        
+
         # Verifica se tem pelo menos 3 colunas
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
@@ -35,9 +35,9 @@ if arquivo:
                 "INTEIRA INFANTIL BILHETERIA": "DAY-USER",
                 "INGRESSO ADULTO BILHETERIA": "DAY-USER",
                 "INGRESSO INFANTIL + ALMOÇO": "DAY-USER",
+                "INGRESSO ESPECIAL": "DAY-USER",
 
                 # Almoço
-                "FEIJOADA 30": "ALMOÇO",
                 "INGRESSO ADULTO + FEIJOADA": "ALMOÇO",
                 "INGRESSO INFANTIL + FEIJOADA": "ALMOÇO",
                 "INGRESSO ADULTO + ALMOÇO": "ALMOÇO",
@@ -59,8 +59,8 @@ if arquivo:
                 "EcoVip s/ Cadastro": "ECOVIP",
                 "EcoVip s/ carteirinha": "ECOVIP",
 
-                # Multiclubes
-                "MULTICLUBES - DAY-USE": "DAY-USER",
+                # Multiclubes - agora não é mais DAY-USER
+                "MULTICLUBES - DAY-USE": "MULTICLUBES - DAY-USE",
 
                 # Agendamento Consultores
                 "AGENDAMENTO - CONSULTORES": "AGEND CONS VENDAS",
@@ -109,7 +109,9 @@ if arquivo:
             # Contagem por categoria
             contagem = df_filtrado["Categoria Final"].value_counts()
 
-            # Parte 1: principais categorias
+            # Gera linhas do relatório
+            linhas = []
+            total1 = 0
             parte1 = [
                 "ECOVIP",
                 "CORTESIA ECOVIP",
@@ -124,9 +126,6 @@ if arquivo:
                 "EXCURSAO",
                 "AÇOES PROMOCIONAIS"
             ]
-
-            linhas = []
-            total1 = 0
             for cat in parte1:
                 valor = contagem.get(cat, 0)
                 total1 += valor
@@ -134,7 +133,6 @@ if arquivo:
             linhas.append(("TOTAL:", total1))
             linhas.append(("", ""))  # linha em branco
 
-            # Parte 2: categorias secundárias
             parte2 = [
                 "INGRESSO BEBÊ",
                 "CASA DA ÁRVORE",
