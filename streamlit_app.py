@@ -22,9 +22,12 @@ if arquivo:
             # Renomeia colunas
             df.columns = ["Localizador", "Categoria", "Data_Hora"]
 
-            # Converte data/hora
-            df['Data_Hora'] = pd.to_datetime(df['Data_Hora'], dayfirst=True, errors='coerce')
-            df['Data'] = df['Data_Hora'].dt.date
+            # Converte data/hora - assumimos que a entrada é yyyy/mm/dd
+            df['Data_Hora'] = pd.to_datetime(df['Data_Hora'], format='%Y/%m/%d %H:%M:%S', errors='coerce')
+            
+            # Extrai a data no formato dd/mm/yyyy
+            df['Data'] = df['Data_Hora'].dt.strftime('%d/%m/%Y')  # Exibição em formato brasileiro
+            df['Data_Obj'] = df['Data_Hora'].dt.date  # Para uso interno nos filtros
 
             # Mapeamento final das categorias
             mapeamento_final = {
@@ -94,7 +97,7 @@ if arquivo:
             df["Categoria Final"] = df["Categoria"].replace({k.upper(): v for k, v in mapeamento_final.items()})
 
             # Filtro por período
-            datas_disponiveis = sorted(df['Data'].dropna().unique())
+            datas_disponiveis = sorted(df['Data_Obj'].dropna().unique())
             if len(datas_disponiveis) > 0:
                 col1, col2 = st.columns(2)
                 with col1:
@@ -102,18 +105,18 @@ if arquivo:
                                                min_value=min(datas_disponiveis), max_value=max(datas_disponiveis))
                 with col2:
                     data_fim = st.date_input("Selecione a data final", value=max(datas_disponiveis),
-                                            min_value=min(datas_disponiveis), max_value=max(datas_disponiveis))
+                                             min_value=min(datas_disponiveis), max_value=max(datas_disponiveis))
 
                 # Filtra os dados entre as datas selecionadas
-                df_filtrado = df[(df['Data'] >= data_inicio) & (df['Data'] <= data_fim)]
-                st.success(f"Mostrando dados de **{data_inicio}** até **{data_fim}**")
+                df_filtrado = df[(df['Data_Obj'] >= data_inicio) & (df['Data_Obj'] <= data_fim)]
+                st.success(f"Mostrando dados de **{data_inicio.strftime('%d/%m/%Y')}** até **{data_fim.strftime('%d/%m/%Y')}**")
             else:
                 st.warning("Nenhuma data válida encontrada no arquivo. Usando todos os dados disponíveis.")
                 df_filtrado = df
 
             # Contagem por categoria
             if "Categoria Final" not in df_filtrado.columns:
-                st.error("⚠️ Coluna 'Categoria Final' não foi criada corretamente. Verifique as categorias do arquivo.")
+                st.error("⚠️ Coluna 'Categoria Final' não foi criada corretamente.")
                 st.stop()
 
             contagem = df_filtrado["Categoria Final"].value_counts()
@@ -170,10 +173,10 @@ if arquivo:
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
             # Exibição do relatório
-            st.subheader(f"Resumo de Acessos {f'(de {data_inicio} a {data_fim})' if len(datas_disponiveis) > 0 else ''}")
+            st.subheader(f"Resumo de Acessos {f'(de {data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')} )' if len(datas_disponiveis) > 0 else ''}")
             st.dataframe(resultado_df, hide_index=True)
 
-            # Exportação para Excel
+            # Exportação para Excel com datas no formato brasileiro
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 resultado_df.to_excel(writer, index=False, sheet_name='Resumo')
