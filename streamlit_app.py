@@ -19,7 +19,7 @@ if arquivo:
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
         else:
-            # Renomeia colunas (ajuste conforme necessário)
+            # Renomeia colunas
             df.columns = ["Localizador", "Categoria", "Data_Hora"]
 
             # Converte data/hora
@@ -61,7 +61,7 @@ if arquivo:
                 "EcoVip s/ Cadastro": "ECOVIP",
                 "EcoVip s/ carteirinha": "ECOVIP",
 
-                # Multiclubes (não é mais DAY-USER)
+                # Multiclubes
                 "MULTICLUBES - DAY-USE": "MULTICLUBES - DAY-USE",
 
                 # Agendamento Consultores
@@ -90,20 +90,27 @@ if arquivo:
             }
 
             # Aplica mapeamento final
-            df["Categoria Final"] = df["Categoria"].str.strip().str.upper().replace({k.upper(): v for k, v in mapeamento_final.items()})
+            df["Categoria Final"] = df["Categoria"].str.strip().str.upper().replace(
+                {k.upper(): v for k, v in mapeamento_final.items()}
+            )
 
-            # Filtro por data
-            datas_disponiveis = df['Data'].dropna().unique()
+            # Filtro por período
+            datas_disponiveis = sorted(df['Data'].dropna().unique())
+
             if len(datas_disponiveis) > 0:
-                data_selecionada = st.selectbox(
-                    "Selecione a data para análise:",
-                    options=["Todos os dias"] + sorted(datas_disponiveis.tolist())
-                )
+                col1, col2 = st.columns(2)
+                with col1:
+                    data_inicio = st.date_input("Selecione a data inicial:", value=min(datas_disponiveis), min_value=min(datas_disponiveis),
+                                                max_value=max(datas_disponiveis))
+                with col2:
+                    data_fim = st.date_input("Selecione a data final:", value=max(datas_disponiveis), min_value=min(datas_disponiveis),
+                                            max_value=max(datas_disponiveis))
 
-                if data_selecionada != "Todos os dias":
-                    df_filtrado = df[df['Data'] == data_selecionada]
-                else:
-                    df_filtrado = df
+                # Filtra o DataFrame com base no período selecionado
+                df_filtrado = df[(df['Data'] >= data_inicio) & (df['Data'] <= data_fim)]
+
+                # Mostra período atual
+                st.info(f"Analisando acessos entre **{data_inicio}** e **{data_fim}**")
             else:
                 st.warning("Nenhuma data válida encontrada no arquivo.")
                 df_filtrado = df
@@ -166,7 +173,7 @@ if arquivo:
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
             # Exibição do relatório
-            st.subheader(f"Resumo de Acessos {f'- {data_selecionada}' if data_selecionada != 'Todos os dias' else ''}")
+            st.subheader(f"Resumo de Acessos {f'(de {data_inicio} a {data_fim})' if len(datas_disponiveis) > 0 else ''}")
             st.dataframe(resultado_df, hide_index=True)
 
             # Exportação para Excel
