@@ -160,15 +160,17 @@ if arquivo:
             linhas.append(("TOTAL (LIMBER):", total2))
 
             # Parte 3: categorias não mapeadas
-            todas_categorias_mapeadas = set(k.upper() for k in mapeamento_final.keys())
-            nao_mapeadas = df_filtrado[df_filtrado["Categoria"].str.upper().not_in(todas_categorias_mapeadas)]
+todas_categorias_mapeadas = set(k.upper() for k in mapeamento_final.keys())
 
-            if not nao_mapeadas.empty:
-                linhas.append(("", ""))
-                linhas.append(("CATEGORIAS NÃO MAPEADAS:", ""))
-                contagem_nao_mapeadas = nao_mapeadas["Categoria"].value_counts()
-                for subcat, val in contagem_nao_mapeadas.items():
-                    linhas.append((subcat, val))
+
+nao_mapeadas = df_filtrado[~df_filtrado["Categoria"].str.upper().isin(todas_categorias_mapeadas)]
+
+if not nao_mapeadas.empty:
+    linhas.append(("", ""))
+    linhas.append(("CATEGORIAS NÃO MAPEADAS:", ""))
+    contagem_nao_mapeadas = nao_mapeadas["Categoria"].value_counts()
+    for subcat, val in contagem_nao_mapeadas.items():
+        linhas.append((subcat, val))
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
