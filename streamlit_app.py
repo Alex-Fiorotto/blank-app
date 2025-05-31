@@ -19,39 +19,17 @@ if arquivo:
         if df.shape[1] < 3:
             st.error("O arquivo deve conter três colunas: Localizador, Categoria e Data/Hora.")
         else:
-            # Renomeia colunas
+            # Renomeia colunas (ajuste conforme necessário)
             df.columns = ["Localizador", "Categoria", "Data_Hora"]
 
             # Converte data/hora
             df['Data_Hora'] = pd.to_datetime(df['Data_Hora'], dayfirst=True, errors='coerce')
-            
-            # Extrai a data (somente dia)
             df['Data'] = df['Data_Hora'].dt.date
 
-            # Remove valores nulos nas datas
-            df = df.dropna(subset=['Data_Hora'])
-            df['Data'] = df['Data_Hora'].dt.date
-
-            # Se houver datas válidas, permite seleção de período
-            datas_disponiveis = sorted(df['Data'].unique())
-
-            if len(datas_disponiveis) > 0:
-                st.subheader("Filtrar por período")
-                col1, col2 = st.columns(2)
-                with col1:
-                    data_inicio = st.date_input("Selecione a data inicial", min_value=min(datas_disponiveis),
-                                                max_value=max(datas_disponiveis), value=min(datas_disponiveis))
-                with col2:
-                    data_fim = st.date_input("Selecione a data final", min_value=min(datas_disponiveis),
-                                            max_value=max(datas_disponiveis), value=max(datas_disponiveis))
-
-                # Filtra os dados entre as datas selecionadas
-                df_filtrado = df[(df['Data'] >= data_inicio) & (df['Data'] <= data_fim)]
-
-                st.success(f"Mostrando dados de **{data_inicio}** até **{data_fim}**")
-            else:
-                st.warning("Nenhuma data válida encontrada no arquivo.")
-                df_filtrado = df
+            # Garante que a coluna "Categoria" não tenha NaN
+            if df['Categoria'].isna().all():
+                st.error("A coluna 'Categoria' está vazia ou inválida. Verifique o conteúdo do arquivo.")
+                st.stop()
 
             # Mapeamento final das categorias
             mapeamento_final = {
@@ -117,10 +95,32 @@ if arquivo:
             }
 
             # Aplica mapeamento final
-            df["Categoria Final"] = df["Categoria"].str.strip().str.upper().replace({k.upper(): v for k, v in mapeamento_final.items()})
+            df["Categoria"] = df["Categoria"].fillna("").astype(str).str.strip().str.upper()
+            df["Categoria Final"] = df["Categoria"].replace({k.upper(): v for k, v in mapeamento_final.items()})
+
+            # Filtro por data
+            datas_disponiveis = sorted(df['Data'].dropna().unique())
+            if len(datas_disponiveis) > 0:
+                col1, col2 = st.columns(2)
+                with col1:
+                    data_inicio = st.date_input("Selecione a data inicial", value=min(datas_disponiveis),
+                                                min_value=min(datas_disponiveis), max_value=max(datas_disponiveis))
+                with col2:
+                    data_fim = st.date_input("Selecione a data final", value=max(datas_disponiveis),
+                                            min_value=min(datas_disponiveis), max_value=max(datas_disponiveis))
+
+                df_filtrado = df[(df['Data'] >= data_inicio) & (df['Data'] <= data_fim)]
+                st.success(f"Mostrando dados de **{data_inicio}** até **{data_fim}**")
+            else:
+                st.warning("Nenhuma data válida encontrada no arquivo. Usando todos os dados disponíveis.")
+                df_filtrado = df
 
             # Contagem por categoria
-            contagem = df_filtrado["Categoria Final"].value_counts()
+            if "Categoria Final" in df_filtrado.columns:
+                contagem = df_filtrado["Categoria Final"].value_counts()
+            else:
+                st.error("A coluna 'Categoria Final' não foi criada corretamente. Verifique as categorias do arquivo.")
+                st.stop()
 
             # Gera linhas do relatório
             linhas = []
@@ -160,23 +160,20 @@ if arquivo:
             linhas.append(("TOTAL (LIMBER):", total2))
 
             # Parte 3: categorias não mapeadas
-            categorias_presentes = df_filtrado["Categoria"].str.strip().str.upper()
-            categorias_mapeadas_keys = set(k.upper() for k in mapeamento_final.keys())
-            mascara_nao_mapeada = ~categorias_presentes.isin(categorias_mapeadas_keys)
-            nao_mapeadas_df = df_filtrado.loc[mascara_nao_mapeada, "Categoria"]
-            contagem_nao_mapeadas = nao_mapeadas_df.value_counts().reset_index()
-            contagem_nao_mapeadas.columns = ["Categoria", "Quantidade"]
+            todas_categorias_mapeadas = set(k.upper() for k in mapeamento_final.keys())
+            nao_mapeadas = df_filtrado[df_filtrado["Categoria"].str.upper().not_in(todas_categorias_mapeadas)]
 
-            if not contagem_nao_mapeadas.empty:
+            if not nao_mapeadas.empty:
                 linhas.append(("", ""))
                 linhas.append(("CATEGORIAS NÃO MAPEADAS:", ""))
-                for _, row in contagem_nao_mapeadas.iterrows():
-                    linhas.append((row["Categoria"], row["Quantidade"]))
+                contagem_nao_mapeadas = nao_mapeadas["Categoria"].value_counts()
+                for subcat, val in contagem_nao_mapeadas.items():
+                    linhas.append((subcat, val))
 
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
             # Exibição do relatório
-            st.subheader(f"Resumo de Acessos {f'(de {data_inicio} a {data_fim})' if 'data_inicio' in locals() and 'data_fim' in locals() else ''}")
+            st.subheader(f"Resumo de Acessos {f'(de {data_inicio} a {data_fim})' if datas_disponiveis else ''}")
             st.dataframe(resultado_df, hide_index=True)
 
             # Exportação para Excel
@@ -205,6 +202,5 @@ if arquivo:
     except Exception as e:
         st.error("Ocorreu um erro ao processar o arquivo. Verifique se o formato está correto.")
         st.error(f"Detalhes técnicos: {e}")
-
 else:
     st.info("Por favor, envie um arquivo Excel com as colunas: Localizador, Categoria e Data/Hora.")
