@@ -24,7 +24,34 @@ if arquivo:
 
             # Converte data/hora
             df['Data_Hora'] = pd.to_datetime(df['Data_Hora'], dayfirst=True, errors='coerce')
+            
+            # Extrai a data (somente dia)
             df['Data'] = df['Data_Hora'].dt.date
+
+            # Remove valores nulos nas datas
+            df = df.dropna(subset=['Data_Hora'])
+            df['Data'] = df['Data_Hora'].dt.date
+
+            # Se houver datas válidas, permite seleção de período
+            datas_disponiveis = sorted(df['Data'].unique())
+
+            if len(datas_disponiveis) > 0:
+                st.subheader("Filtrar por período")
+                col1, col2 = st.columns(2)
+                with col1:
+                    data_inicio = st.date_input("Selecione a data inicial", min_value=min(datas_disponiveis),
+                                                max_value=max(datas_disponiveis), value=min(datas_disponiveis))
+                with col2:
+                    data_fim = st.date_input("Selecione a data final", min_value=min(datas_disponiveis),
+                                            max_value=max(datas_disponiveis), value=max(datas_disponiveis))
+
+                # Filtra os dados entre as datas selecionadas
+                df_filtrado = df[(df['Data'] >= data_inicio) & (df['Data'] <= data_fim)]
+
+                st.success(f"Mostrando dados de **{data_inicio}** até **{data_fim}**")
+            else:
+                st.warning("Nenhuma data válida encontrada no arquivo.")
+                df_filtrado = df
 
             # Mapeamento final das categorias
             mapeamento_final = {
@@ -90,30 +117,7 @@ if arquivo:
             }
 
             # Aplica mapeamento final
-            df["Categoria Final"] = df["Categoria"].str.strip().str.upper().replace(
-                {k.upper(): v for k, v in mapeamento_final.items()}
-            )
-
-            # Filtro por período
-            datas_disponiveis = sorted(df['Data'].dropna().unique())
-
-            if len(datas_disponiveis) > 0:
-                col1, col2 = st.columns(2)
-                with col1:
-                    data_inicio = st.date_input("Selecione a data inicial:", value=min(datas_disponiveis), min_value=min(datas_disponiveis),
-                                                max_value=max(datas_disponiveis))
-                with col2:
-                    data_fim = st.date_input("Selecione a data final:", value=max(datas_disponiveis), min_value=min(datas_disponiveis),
-                                            max_value=max(datas_disponiveis))
-
-                # Filtra o DataFrame com base no período selecionado
-                df_filtrado = df[(df['Data'] >= data_inicio) & (df['Data'] <= data_fim)]
-
-                # Mostra período atual
-                st.info(f"Analisando acessos entre **{data_inicio}** e **{data_fim}**")
-            else:
-                st.warning("Nenhuma data válida encontrada no arquivo.")
-                df_filtrado = df
+            df["Categoria Final"] = df["Categoria"].str.strip().str.upper().replace({k.upper(): v for k, v in mapeamento_final.items()})
 
             # Contagem por categoria
             contagem = df_filtrado["Categoria Final"].value_counts()
@@ -158,7 +162,6 @@ if arquivo:
             # Parte 3: categorias não mapeadas
             categorias_presentes = df_filtrado["Categoria"].str.strip().str.upper()
             categorias_mapeadas_keys = set(k.upper() for k in mapeamento_final.keys())
-
             mascara_nao_mapeada = ~categorias_presentes.isin(categorias_mapeadas_keys)
             nao_mapeadas_df = df_filtrado.loc[mascara_nao_mapeada, "Categoria"]
             contagem_nao_mapeadas = nao_mapeadas_df.value_counts().reset_index()
@@ -173,7 +176,7 @@ if arquivo:
             resultado_df = pd.DataFrame(linhas, columns=["Categoria", "Quantidade"])
 
             # Exibição do relatório
-            st.subheader(f"Resumo de Acessos {f'(de {data_inicio} a {data_fim})' if len(datas_disponiveis) > 0 else ''}")
+            st.subheader(f"Resumo de Acessos {f'(de {data_inicio} a {data_fim})' if 'data_inicio' in locals() and 'data_fim' in locals() else ''}")
             st.dataframe(resultado_df, hide_index=True)
 
             # Exportação para Excel
@@ -202,5 +205,6 @@ if arquivo:
     except Exception as e:
         st.error("Ocorreu um erro ao processar o arquivo. Verifique se o formato está correto.")
         st.error(f"Detalhes técnicos: {e}")
+
 else:
     st.info("Por favor, envie um arquivo Excel com as colunas: Localizador, Categoria e Data/Hora.")
