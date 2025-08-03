@@ -136,6 +136,7 @@ if arquivo:
             "VISITA GUIADA",
             "EXCURSAO",
             "AÇOES PROMOCIONAIS"
+            "MULTICLUBES - DAY-USE"
         ]
         for cat in parte1:
             valor = contagem.get(cat, 0)
