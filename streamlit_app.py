@@ -135,7 +135,7 @@ if arquivo:
             "ALMOÇO",
             "VISITA GUIADA",
             "EXCURSAO",
-            "AÇOES PROMOCIONAIS"
+            "AÇOES PROMOCIONAIS",
             "MULTICLUBES - DAY-USE"
         ]
         for cat in parte1:
